@@ -1,79 +1,166 @@
-# Singleton
+# Improved README for Design Patterns
 
-    - Eager initialization
-    - Static Block initialization
-    - Lazy initialization
-    - ThreadSafe singleton
-    - Bill Pugh Singleton
+## Singleton Design Pattern Overview
+The Singleton pattern ensures that a class has only one instance and provides a global point of access to that instance. This is particularly useful when managing shared resources such as database connections or configuration settings.
 
+### Types of Singleton Implementations
 
+1. **Eager Initialization**
+   - **Description**: The instance is created at the time of class loading.
+   - **Advantages**: Simple to implement.
+   - **Disadvantages**:
+     - Does not handle exceptions using try-catch.
+     - Creates an instance whether it is needed or not, potentially wasting resources.
 
-    - ProductDao productDao=new ProductDao(); 
-    !! each instance occupy a place on memory !!
+2. **Static Block Initialization**
+   - **Description**: Similar to eager initialization, but with a static block to handle exceptions.
+   - **Advantages**: Can handle exceptions during instance creation.
+   - **Disadvantages**:
+     - Instance is created automatically, regardless of whether it is required.
 
-    Let's assume:
+3. **Lazy Initialization**
+   - **Description**: The instance is created only when it is needed.
+   - **Advantages**: Reduces memory usage and delays the creation of the instance until it is actually required.
+   - **Disadvantages**:
+     - Not thread-safe. Multiple threads accessing simultaneously may create multiple instances, leading to exceptions.
 
-    we've 1 millions request at once, and each request takes 1KB
+4. **Thread-Safe Singleton**
+   - **Description**: Ensures thread safety by synchronizing the method that creates the instance.
+   - **Advantages**: Prevents multiple threads from creating separate instances.
+   - **Disadvantages**:
+     - Synchronization adds overhead, impacting performance.
 
-    it'll take 1.000.000 KB place on the server
-    don't forget each dao opens a connection to "DB" each connection has its own expense.
+5. **Bill Pugh Singleton**
+   - **Description**: Uses a static inner class to achieve lazy initialization and thread safety without synchronization overhead.
+   - **Advantages**:
+     - More efficient in terms of load time.
+     - Thread-safe.
+   - **Disadvantages**: Complex to implement compared to simpler methods.
 
-    1.000.000 KB approxiametly 1 GB !
-    1.000.000 Connection
+### Real-world Example: ProductDao Class
+Consider the following code snippet:
+```java
+ProductDao productDao = new ProductDao();
+```
+**Problem**: Each instance created consumes memory. If 1 million requests are processed simultaneously and each instance consumes 1KB of memory:
+- **Memory Usage**: 1,000,000 KB (~1 GB).
+- **Connection Overload**: Each instance creates a new database connection, leading to significant resource overhead. For example, PostgreSQL only allows 100 connections per user by default.
 
-    For Instance, PGSQL only accept 100 connection from "single" user. So
-    how we can handle this problem? with Singletion.
+**Solution**: Using a Singleton pattern allows a single instance to be reused across all requests, significantly reducing memory and connection usage. The instance remains in heap memory, ready for use.
 
-    JVM içerisinde/RAM'de 1 instance ile bütün işimizi görme işlemi "Singleton Design Pattern" ile sağlanır.
-    Oluşturulan instance heap memoryde kullanıma hazır halde bekler.
+## Detailed Explanation of Singleton Implementations
 
-    ## Eager Singleton
-    - disadvantage: you cannot use try-catch 
-    - disadvantage: its create an instance automaticly, it doesn't matter you need or not!
+### Eager Singleton Example
+```java
+public class EagerSingleton {
+    private static final EagerSingleton instance = new EagerSingleton();
 
-    ## StaticBlock Singleton
-    - disadvantage: its creates an instance auto, wheather you need or not 
+    private EagerSingleton() {}
 
+    public static EagerSingleton getInstance() {
+        return instance;
+    }
+}
+```
 
-    ## Lazy Singleton
-    - disadvantage: the object which created is not "thread-safe". So 2 service/user can try to access at the same time and it might return exception.
+### Static Block Singleton Example
+```java
+public class StaticBlockSingleton {
+    private static final StaticBlockSingleton instance;
 
-    ## Threadsafe singleton
-    - disadvantage: while checking if the object is already using by someone/something, it costs extra expense.
+    static {
+        try {
+            instance = new StaticBlockSingleton();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception occurred during instance creation", e);
+        }
+    }
 
-    ## BillPugh Singleton
-        - load time kazandırır.
-        - thread-safe ayarlanabilir fakat load-time kazandırmaz.
-        - inner class sayesinde iki taraflı erişimle INSTANCE oluştururuz.
+    private StaticBlockSingleton() {}
 
+    public static StaticBlockSingleton getInstance() {
+        return instance;
+    }
+}
+```
 
-# Factory Design Pattern
-Yaptığımız abstractionun kullanımını diğer developerlar için daha kolay hale getirmek amacıyla kullanılır.
+### Lazy Initialization Example
+```java
+public class LazySingleton {
+    private static LazySingleton instance;
 
-Run.java'daki kodugumuzu incelediğimizde factory design pattern'in bize sağladığı avantajları şöyle sıralayabilriz;
-1-Bütün işlemleri tek bir "FileExporterFactory" gibi bir Classla halledebilmemize olanak sağladı.
-2-Bunu kullanan developerlar'ın instance oluşturup new'lemesine gerek kalmadı
-3-invalid parametre girişi engellendi.
-4-bütün işlemler static bir fonksiyon sayesinde chain edilip kullanıldı.
-5-ExcelExporter,PDFExporter public yapılmadı yani başka paketten import edildiğinde sadece FileExporterFactory'i kullanabilir.
+    private LazySingleton() {}
 
+    public static LazySingleton getInstance() {
+        if (instance == null) {
+            instance = new LazySingleton();
+        }
+        return instance;
+    }
+}
+```
 
-# Builder Design Pattern
-- Kod kalabalığını önler
-- Performansa ve zamandan kazanç gibi amacı yoktur - az da olsa etkisi olabilir :)) -
-- Lombok ile builder yapımı çok daha kolaylaşmıştır.
-- Senaryo üzerinen düşünmek gerekirse; 
-varsayalım ki 40 attributeye sahip bir objede 34 attribute girip kullanmak istiyoruz, nasıl bir yol izleyeceğiz?
-    - 34 parametreli constructor oluşturma !worst practice!
-    - set ile 34 parametre girmek !bad coding!
-    - Builder kullanımı :)) YESSS
+### Thread-Safe Singleton Example
+```java
+public class ThreadSafeSingleton {
+    private static ThreadSafeSingleton instance;
 
-# Decorator design pattern
-- aynı kodu tekrar etmemek amacıyla kullanılır.
-- katmanlı şekilde birbirinin üzerine eklenen yapılarda kullanılabilir.
+    private ThreadSafeSingleton() {}
 
+    public static synchronized ThreadSafeSingleton getInstance() {
+        if (instance == null) {
+            instance = new ThreadSafeSingleton();
+        }
+        return instance;
+    }
+}
+```
 
-# Facade design pattern 
-- Cephe anlamına gelen bu design patternin amacı geliştirilen bir yazılımın/ürünün son kullanıcıya ulaştığında detaylara boğulmadan sadece gereki detayları görmesini sağladığımız yapıdır.
+### Bill Pugh Singleton Example
+```java
+public class BillPughSingleton {
+    private BillPughSingleton() {}
 
-- Örneğin Driver, Encrypting gibi işlemlerin yapılması için birden fazla yöntem vardır bunları özet bir classa yazıp tek classla birden fazla Driver veya birden fazla encrpyting yönteminden istenilen kullanılabilir.
+    private static class SingletonHelper {
+        private static final BillPughSingleton INSTANCE = new BillPughSingleton();
+    }
+
+    public static BillPughSingleton getInstance() {
+        return SingletonHelper.INSTANCE;
+    }
+}
+```
+
+---
+
+## Factory Design Pattern Overview
+The Factory pattern simplifies the creation of objects and provides an interface for creating instances without specifying the exact class.
+
+### Benefits of the Factory Pattern
+1. **Centralized Object Creation**: Simplifies the process by handling object instantiation in a single class, such as `FileExporterFactory`.
+2. **Ease of Use**: Developers using the factory do not need to create new instances directly.
+3. **Input Validation**: Prevents invalid parameter usage.
+4. **Chained Operations**: Facilitates static method calls that can be chained.
+5. **Extensibility**: Supports new types like `ExcelExporter`, `PDFExporter`, etc., without altering existing code.
+
+### Example Code
+```java
+public class FileExporterFactory {
+    public static FileExporter getFileExporter(String type) {
+        switch (type) {
+            case "PDF":
+                return new PDFExporter();
+            case "Excel":
+                return new ExcelExporter();
+            default:
+                throw new IllegalArgumentException("Invalid export type");
+        }
+    }
+}
+```
+This pattern enhances code maintainability, readability, and extensibility.
+
+---
+
+By using these design patterns, developers can build efficient, scalable, and maintainable applications.
+
