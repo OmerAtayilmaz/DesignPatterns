@@ -1,0 +1,15 @@
+{
+    "name": "acme/adapter",
+    "description": "Adapter design pattern",
+    "authors": [
+        {
+            "name": "omer.atayilmaz"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Acme\\Adapter\\" : "src/"
+        }
+    }
+}
